@@ -2,6 +2,7 @@
 https://mconcan.shinyapps.io/NHL_xG/
 
 # Link to Project Video
+https://github.com/ds4ph-bme/capstone-project-mconcan
 
 # Background
 This tool is based off of the work of numerous others, including:

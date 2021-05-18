@@ -5,8 +5,8 @@ account: mconcan
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4123980
-bundleId: 4613407
+bundleId: 4613545
 url: https://mconcan.shinyapps.io/NHL_xG/
-when: 1621375748.87127
+when: 1621378446.29811
 asMultiple: FALSE
 asStatic: FALSE
