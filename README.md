@@ -3,7 +3,7 @@ https://mconcan.shinyapps.io/NHL_xG/
 
 # Link to Project Video
 
-#Background
+# Background
 This tool is based off of the work of numerous others, including:
 
 [Micah Blake McCurdy](https://hockeyviz.com/txt/xg4)
@@ -29,8 +29,8 @@ In the Shot Simulator tab, you can determine the xG value of an arbitrary shot. 
 
 # Sample Usage
 Game Map for 05/18/21 Washington Capitals vs. Boston Bruins
-![Full Rink Game Map]("https://github.com/ds4ph-bme/capstone-project-mconcan/blob/97b48add8326ba9b8a752108c6541cdb7b0426dd/full_rink_game_map.png")
-![Zoomed in Game Map]("https://github.com/ds4ph-bme/capstone-project-mconcan/blob/97b48add8326ba9b8a752108c6541cdb7b0426dd/zoomed_in_game_map.png")
+![Full Rink Game Map](full_rink_game_map.png)
+![Zoomed in Game Map](zoomed_in_game_map.png)
 
 Shot Simulation
-![Simulated Shot]("https://github.com/ds4ph-bme/capstone-project-mconcan/blob/97b48add8326ba9b8a752108c6541cdb7b0426dd/simulated_shot.png")
+![Simulated Shot](simulated_shot.png)
