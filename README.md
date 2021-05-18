@@ -2,7 +2,7 @@
 https://mconcan.shinyapps.io/NHL_xG/
 
 # Link to Project Video
-https://github.com/ds4ph-bme/capstone-project-mconcan
+https://livejohnshopkins-my.sharepoint.com/personal/mconcan2_jh_edu/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fmconcan2%5Fjh%5Fedu%2FDocuments%2FCapstone%5FProject%5FVid%2Emp4&parent=%2Fpersonal%2Fmconcan2%5Fjh%5Fedu%2FDocuments
 
 # Background
 This tool is based off of the work of numerous others, including:
