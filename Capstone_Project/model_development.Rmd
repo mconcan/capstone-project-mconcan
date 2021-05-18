@@ -1,0 +1,155 @@
+---
+title: "xG Model Development"
+output: html_notebook
+---
+
+```{r, message = false}
+library(reticulate)
+py_install("pandas")
+py_install("hockey_scraper", pip = TRUE)
+```
+
+Scrape NHL play by play data using hockey_scraper Python package
+```{python, message = false}
+import pandas
+import hockey_scraper
+
+#using 2018-2019 season for regression to minimize amount of data + because scraping is really slow
+scraped_data = hockey_scraper.scrape_seasons([2018], False, docs_dir = "hockey_scraper_data")
+```
+
+Read in scraped data
+```{r}
+library(tidyverse)
+
+data = read_csv("hockey_scraper_data/csvs/nhl_pbp_20182019.csv")
+```
+
+Data processing
+```{r, message=FALSE}
+#not looking at player-level data here
+  c_drop <- c("X1","p1_name", "p1_ID", "p2_name", "p2_ID", "p3_name", "p3_ID", "awayPlayer1", "awayPlayer1_id", "awayPlayer2", "awayPlayer2_id", "awayPlayer3", "awayPlayer3_id", "awayPlayer4", "awayPlayer4_id", "awayPlayer5", "awayPlayer5_id", "awayPlayer6", "awayPlayer6_id", "homePlayer1", "homePlayer1_id", "homePlayer2", "homePlayer2_id", "homePlayer3", "homePlayer3_id", "homePlayer4", "homePlayer4_id", "homePlayer5", "homePlayer5_id", "homePlayer6", "homePlayer6_id", "Away_Goalie", "Away_Goalie_Id", "Home_Goalie", "Home_Goalie_Id", "Home_Coach", "Away_Coach", "Away_Players", "Home_Players", "Date", "Description", "Home_Zone", "Time_Elapsed")
+
+#only want faceoffs, hits, blocks, misses, and shots
+  event_drop <- c("PSTR", "PGSTR", "ON", "OFF", "STOP", "PENL", "PEND", "GEND")
+  strength_keep <- c("5x5") #training 5v5 model
+    
+  data = data[,!(names(data) %in% c_drop)]
+  data= data[!data$Event %in% event_drop, ]
+  data = data[data$Strength %in% strength_keep, ]
+  
+  #drop any events for which x/y coordinates are not available
+  data = data[!is.na(data$xC), ]
+  data = data[!is.na(data$yC), ]
+  data = data[!is.na(data$Ev_Zone), ]
+  
+  #make sure x/y coordinates are numeric
+  data$xC = as.numeric(data$xC)
+  data$yC = as.numeric(data$yC)
+
+```
+
+Functions to calculate shot distance and angle
+```{r, echo = false} 
+#calculate distance of an event from the target goal
+calculate_distance <- function(frame_row) {
+  event_dist = -1
+  xC = as.numeric(frame_row[13])
+  yC = as.numeric(frame_row[14])
+  #block zones are recorded based on blocking team, not shooting team, so need to flip
+  if(frame_row[6] == "Off" || (frame_row[6] == 'Def' && frame_row[3] == 'BLOCK')) { 
+    event_dist = sqrt((abs(xC) - 89)^2+(yC)^2)
+  } else { #shot from behind center line
+    event_dist = sqrt((abs(xC) + 89)^2+(yC)^2)
+  }
+  return(event_dist)
+}
+
+#calculate angle of an event from target goal
+calculate_angle <- function(frame_row) {
+  event_angle = 0
+  xC = as.numeric(frame_row[13])
+  yC = as.numeric(frame_row[14]) 
+  if(frame_row[6] == "Off" || (frame_row[6] == 'Def' && frame_row[3] == 'BLOCK')) {
+    event_angle = abs(atan(yC / (89 - abs(xC))) * (180 / pi))
+  } else {
+    event_angle = abs(atan(yC / (abs(xC + 89))) * (180 / pi))
+  }
+  return(event_angle)
+}
+
+```
+
+Add columns for distance and angle, convert shot type to factor
+```{r, echo = false}
+  data$distance =  apply(data, 1, function(x) calculate_distance(x))
+  data$angle = apply(data, 1, function(x) calculate_angle(x))
+  data$shot_type = as.factor(data$Type)
+```
+ 
+Add additional columns for analysis: coordinates of last event, distance of last event from current event, time since last event, whether the last event was a shot by the team, whether event resulted in a goal, goal differential
+```{r, echo = false} 
+  num_rows = nrow(data)
+  metrics = data.frame(
+  xC_last = rep(NA, num_rows),
+  yC_last = rep(NA, num_rows),
+  distance_from_last = rep(NA, num_rows),
+  seconds_since_last = rep(NA, num_rows),
+  prior_team_shot = rep(NA, num_rows),
+  prior_face_win = rep(NA, num_rows),
+  is_home = rep(NA, num_rows),
+  goal = rep(NA, num_rows),
+  goal_dif = rep(NA, num_rows),
+  game_time = rep(NA, num_rows))
+  
+  
+  for(j in 2:nrow(data)) {
+    #only care about these metrics for shots, misses, blocks, and goals
+    if(data[j,]$Event != 'FAC' && data[j,]$Event != 'HIT' && data[j,]$Event != 'GIVE' && data[j,]$Event != 'TAKE') {
+      #can only compare data from same game and period
+    if(data[j,]$Period == data[j-1,]$Period && data[j,]$Game_Id == data[j-1,]$Game_Id){ 
+      metrics$xC_last[j] = data$xC[j-1]
+      metrics$yC_last[j] = data$yC[j-1]
+      metrics$distance_from_last[j] = sqrt((as.numeric(data[j,]$xC) - as.numeric(metrics$xC_last[j]))^2 +
+                                             (as.numeric(data[j,]$yC) -   as.numeric(metrics$yC_last[j]))^2)
+      metrics$seconds_since_last[j] = as.numeric(data[j,]$Seconds_Elapsed) - as.numeric(data[j-1,]$Seconds_Elapsed)
+      metrics$prior_team_shot[j] = ((data[j-1, ]$Event == 'SHOT') && (data[j-1, ]$Ev_Team == data[j, ]$Ev_Team))
+      metrics$prior_face_win[j] = ((data[j-1, ]$Event == 'FAC') && (data[j-1, ]$Ev_Team == data[j, ]$Ev_Team))
+    }
+      metrics$is_home[j] = (data[j,]$Ev_Team == data[j,]$Home_Team)
+      metrics$goal[j] = (data[j,]$Event == 'GOAL')
+      metrics$goal_dif[j] = data[j, ]$Home_Score - data[j,]$Away_Score
+      metrics$game_time[j] = (data[j, ]$Period - 1)*20*60 + data[j,]$Seconds_Elapsed 
+    }
+  }
+  
+```
+
+```{r}
+data = cbind(data, metrics)
+```
+
+Drop out rows/columns that are no longer needed
+```{r, echo = false}
+#remove non-shot rows
+r_drop = c("HIT", "FAC", "GIVE", "TAKE")
+data = data[!data$Event %in% r_drop, ]
+
+cdrop2 = c("Home_Team", "Away_Team", "Game_Id", "Strength", "Type", "Ev_Zone", "Event", "Ev_Team", "Period", "Seconds_Elapsed")
+data =  data[,!(names(data) %in% cdrop2)]
+```
+
+
+Run logistic regression
+```{r, echo = false}
+library(glmnet)
+
+#parameters: distance, angle, goal differential, time, shot type
+xG_even_strength = glm(formula = goal ~ xC + yC + xC_last + yC_last + distance + angle + seconds_since_last + distance_from_last + prior_team_shot + shot_type + goal_dif, family = "binomial", data = data)
+```
+
+```{r, echo = false}
+summary(xG_even_strength)
+save(xG_even_strength, file = "xG_even_strength_model.rda")
+```
+
