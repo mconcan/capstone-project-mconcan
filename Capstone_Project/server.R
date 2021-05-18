@@ -122,6 +122,7 @@ shinyServer(function(input, output, session) {
                      "prior_team_shot" = as.logical(input$ps),
                      "shot_type" = as.factor(toupper(input$shot_type)),
                      "goal_dif" = (input$gF - input$gA))
+    load("xG_even_strength_model.rda")
     prediction = predict(xG_even_strength, dat, type="response")
     prediction = round(prediction, 3) 
     girafe(ggobj = (nhl_rink_plot() + geom_point_interactive(data = points, mapping = aes(x = x, y = y,
