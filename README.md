@@ -1,5 +1,7 @@
-#Link to App
+# Link to App
 https://mconcan.shinyapps.io/NHL_xG/
+
+# Link to Project Video
 
 #Background
 This tool is based off of the work of numerous others, including:
@@ -25,10 +27,10 @@ In the Game Maps tab, you can create a shot map for a selected game. There are o
 2. Shot Simulator
 In the Shot Simulator tab, you can determine the xG value of an arbitrary shot. Using inputs such as location, game state, and prior events, an xG value is calculated and plotted along with the shot location. This allows for visualization of how the model handles different parameters.
 
-#Sample Usage
+# Sample Usage
 Game Map for 05/18/21 Washington Capitals vs. Boston Bruins
-![Full Rink Game Map]("full_rink_game_map")
-![Zoomed in Game Map]("zoomed_in_game_map")
+![Full Rink Game Map]("full_rink_game_map.png")
+![Zoomed in Game Map]("zoomed_in_game_map.png")
 
 Shot Simulation
-![Simulated Shot]("simulated_shot")
+![Simulated Shot]("simulated_shot.png")
