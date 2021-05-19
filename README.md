@@ -2,7 +2,8 @@
 https://mconcan.shinyapps.io/NHL_xG/
 
 # Link to Project Video
-https://livejohnshopkins-my.sharepoint.com/personal/mconcan2_jh_edu/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fmconcan2%5Fjh%5Fedu%2FDocuments%2FCapstone%5FProject%5FVid%2Emp4&parent=%2Fpersonal%2Fmconcan2%5Fjh%5Fedu%2FDocuments
+
+https://livejohnshopkins-my.sharepoint.com/:v:/g/personal/mconcan2_jh_edu/ESjI5qPcDZ9Mnn_DBN6TMvYB70_uwiDbI27W_44h7xKFpQ?e=Hdgc0N
 
 # Background
 This tool is based off of the work of numerous others, including:
